@@ -1,0 +1,27 @@
+{
+  "name": "PlayItApp",
+  "version": "1.0.0",
+  "description": "Tool to view players and store progress",
+  "main": "playit.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "play",
+    "omxplayer",
+    "cmd",
+    "raspi",
+    "node",
+    "video"
+  ],
+  "author": "Tishin Alex",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^1.0.0",
+    "commander": "^2.8.1",
+    "glob": "^5.0.10",
+    "keypress": "^0.2.1",
+    "lodash": "^3.9.3",
+    "moment": "^2.10.3"
+  }
+}
