@@ -1,4 +1,5 @@
 #!/usr/local/bin/node
+
 var fs = require('fs'),
     util = require('util'),
     path = require('path'),
@@ -6,7 +7,7 @@ var fs = require('fs'),
     moment = require('moment'),
     glob = require('glob'),
     cmd = require('commander'),     //https://github.com/tj/commander.js
-    keypress = require('keypress'), //https://github.com/TooTallNate/keypress
+    //keypress = require('keypress'), //https://github.com/TooTallNate/keypress
     chalk = require('chalk'),       //https://github.com/sindresorhus/chalk
     _ = require('lodash');          //https://lodash.com/docs#trim
 
@@ -51,7 +52,7 @@ var config = {
 };
 
 console.log(chalk.bold('PlayItApp!'));
-console.log('Args:', cmd.args);
+console.log(chalk.bold('Args:'), cmd.args);
 
 if (cmd.init) {
     console.log('Init..');
@@ -63,9 +64,10 @@ if (cmd.init) {
     return;
 }
 
+var configLoaded = config.load();
 if (cmd.args.length < 1) {
-    if (config.load()) {
-        console.log(config.data);
+    if (configLoaded) {
+        console.log(chalk.bold('Settings:'), config.data);
         //Print founded files for pattern
     } else {
         console.warn('Folder not initialized, run with "--init"');
@@ -74,38 +76,27 @@ if (cmd.args.length < 1) {
 }
 
 if (_.contains(cmd.args, 'next')) {
-    config.data.position++;
+    config.data.position+=1;
+    console.log('New position:', config.data.position);
 }
 
 if (_.contains(cmd.args, 'prev')) {
-    config.data.position--;
+    config.data.position-=1;
+    console.log('New position:', config.data.position);
 }
 
 if (!config.validate()) {
     console.warn('Config file not valid, please recheck it');
     return;
+} else {
+    config.save();
 }
 
-if (_.contains(cmd.args, 'play')) {
-    var playerArgs = config.data.playerArgs;
-    playerArgs.push(util.format(config.data.fileFormat, config.data.position));
+var playerArgs = config.data.playerArgs;
+playerArgs.push(util.format(config.data.fileFormat, config.data.position));
 
-    omx = spawn(config.data.player, playerArgs, { 
-        stdio: 'inherit' 
-    });
-
-    omx.on('close', function (code) {
-        console.log(_.capitalize(config.data.player) + ' has exited with code ' + code);
-    });
-}
-
-/*
-keypress(process.stdin);
-process.stdin.on('keypress', function (ch, key) {
-    console.log(key);
-    if (key && key.ctrl && key.name == 'c') {
-        process.stdin.pause();
-    }
+spawn(config.data.player, playerArgs, { 
+    stdio: 'inherit' 
+}).on('close', function (code) {
+    console.log(_.capitalize(config.data.player) + ' has exited with code ' + code);
 });
-process.stdin.setRawMode(true);
-process.stdin.resume();*/
