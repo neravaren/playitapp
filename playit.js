@@ -9,12 +9,14 @@ var fs = require('fs'),
     cmd = require('commander'),     //https://github.com/tj/commander.js
     //keypress = require('keypress'), //https://github.com/TooTallNate/keypress
     chalk = require('chalk'),       //https://github.com/sindresorhus/chalk
-    _ = require('lodash');          //https://lodash.com/docs#trim
+    _ = require('lodash'),          //https://lodash.com/docs#trim
+    pattern = require('./patternSearch');
 
 cmd.version('1.0.0')
-   .option('-i, --init', 'Init current folder as playable', '')
-   .option('-s, --set [command]', 'Set command used to play video', '')
-   .option('-c, --current [num]', 'Change current series', '')
+   .option('-i, --initdir', 'Init current folder as playable based on content', '')
+   .option('-f, --initfile [srcfile]', 'Init current folder as playable based on url list file', '')
+   .option('-s, --set [command]', 'Set pattern of command used to play video', '')
+   .option('-c, --current [num]', 'Force to change current series', '')
    .parse(process.argv);
 
 var config = {
@@ -22,8 +24,8 @@ var config = {
         player: 'omxplayer',
         playerArgs: ['-r', '-b', '--align', 'center'],
         fileFormat: 'One Piece %s.mp4',
-        position: 667,
-        season: 1
+        playlistType: 'incremental',
+        position: 667
     },
     env: {
         cwd: process.cwd(),
@@ -45,32 +47,52 @@ var config = {
     validate: function() {
         if (this.data.fileFormat.indexOf('%s') < 0 )
             return false;
-        if (!fs.existsSync(util.format(this.data.fileFormat, this.data.position))) 
+        if (!fs.existsSync(util.format(this.data.fileFormat, this.data.position)))
             return false;
         return true;
+    },
+    init: function(dir, cb) {
+        pattern.getMetrics(dir, { ctx: this }, function(e, r) {
+            if (e) { cb(e); return; }
+            var nr = _.last(r);
+            console.log(util.format('Found %s items by pattern "%s"', nr.count, nr.pattern));
+            var newData = {
+                fileFormat: nr.pattern,
+                playlistType: 'glob',
+                position: 1
+            };
+            this.data = _.extend(this.data, newData);
+            cb(null);
+        });
     }
 };
 
 console.log(chalk.bold('PlayItApp!'));
 console.log(chalk.bold('Args:'), cmd.args);
 
-if (cmd.init) {
-    console.log('Init..');
-    //TODO
-    //Read directory, find pattern
-    //Save config
-    //Maye ask settings in command-promt?
-    config.save();
+if (cmd.initdir) {
+    console.log('Init folder..');
+    config.init('.', function(e) {
+        config.save();
+    });
     return;
 }
 
 var configLoaded = config.load();
+
+if (cmd.current > 0) {
+    console.log('Chaging current series to ' + cmd.current);
+    config.data.position = cmd.current;
+    config.save();
+    return;
+}
+
 if (cmd.args.length < 1) {
     if (configLoaded) {
         console.log(chalk.bold('Settings:'), config.data);
         //Print founded files for pattern
     } else {
-        console.warn('Folder not initialized, run with "--init"');
+        console.warn('Folder not initialized, run with "-i"');
     }
     return;
 }
@@ -85,15 +107,24 @@ if (_.contains(cmd.args, 'prev')) {
     console.log('New position:', config.data.position);
 }
 
-if (!config.validate()) {
+/*if (!config.validate()) {
     console.warn('Config file not valid, please recheck it');
     return;
 } else {
     config.save();
-}
+}*/
+
+var playingItem = pattern.getPlaylistItemSync({
+    dir: process.cwd(), 
+    type: config.data.playlistType, 
+    pattern: config.data.fileFormat, 
+    position: config.data.position
+});
+console.log('Playing', playingItem);
+//  util.format(config.data.fileFormat, config.data.position); //getPlaylistItem
 
 var playerArgs = config.data.playerArgs;
-playerArgs.push(util.format(config.data.fileFormat, config.data.position));
+playerArgs.push(playingItem);
 
 spawn(config.data.player, playerArgs, { 
     stdio: 'inherit' 
