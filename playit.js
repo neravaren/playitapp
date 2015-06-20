@@ -98,13 +98,15 @@ if (cmd.args.length < 1) {
 }
 
 if (_.contains(cmd.args, 'next')) {
-    config.data.position+=1;
+    config.data.position = parseInt(config.data.position) + 1;
     console.log('New position:', config.data.position);
+    config.save();
 }
 
 if (_.contains(cmd.args, 'prev')) {
-    config.data.position-=1;
+    config.data.position = parseInt(config.data.position) - 1;
     console.log('New position:', config.data.position);
+    config.save();
 }
 
 /*if (!config.validate()) {

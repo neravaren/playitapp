@@ -100,7 +100,7 @@ var getPlaylistItemSync = function(params) {
             return targetFile;
         case 'glob':
             var r = glob.sync(escapePath(pattern), { cwd: dir });
-            var targetFile = r[position];
+            var targetFile = r[position-1];
             return targetFile;
         case 'file':
             return;
