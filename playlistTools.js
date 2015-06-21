@@ -1,4 +1,5 @@
-var path = require('path'),
+var fs = require('fs'),
+    path = require('path'),
     util = require('util'),
     glob = require('glob'),
     async = require('async'),
@@ -8,7 +9,7 @@ var escapePath = function(path) {
     return path.replace(/\[/g, '?').replace(/\]/g, '?');
 };
 
-var getMetric = function(dir, file, cb) {
+var getFileMetric = function(dir, file, cb) {
     var extname = path.extname(file);
     var basename = path.basename(file, extname);
     
@@ -40,7 +41,7 @@ var getMetrics = function(dir, params, cb) {
         function(files, cb) {
             var patterns = [];
             async.eachSeries(files, function(file, cb) {
-                getMetric(dir, file, function(e, r) {
+                getFileMetric(dir, file, function(e, r) {
                     if (e) { cb(e); return; }
                     patterns.push(r);
                     cb();
@@ -61,25 +62,20 @@ var getMetrics = function(dir, params, cb) {
     });
 };
 
-var getPlaylistItem = function(params, cb) {
+var getPlaylist = function(params, cb) {
     var dir = params.dir;
     var type = params.type;
     var pattern = params.pattern;
-    var position = params.position;
-
     switch(type) {
-        case 'incremental':
-            var targetFile = util.format(pattern, position)
-            cb(null, targetFile);
-            return;
         case 'glob':
-            glob(escapePath(pattern), { cwd: dir }, function(e, r) {
-                if (e) { cb(e); return; }
-                var targetFile = r[position];
-                cb(null, targerFile);
-            });
+            glob(escapePath(pattern), { cwd: dir }, cb);
             return;
         case 'file':
+            fs.readFile(path.join(dir, pattern), function(e, r) {
+                if (e) { cb(e); return; }
+                var result = _.compact(_.map(r.toString().split('\n'), _.trim));
+                cb(null, result);
+            });
             return;
         default:
             cb(new Error('Invalid type'));
@@ -87,29 +83,17 @@ var getPlaylistItem = function(params, cb) {
     };
 };
 
-var getPlaylistItemSync = function(params) {
-    console.log(params);
-    var dir = params.dir;
-    var type = params.type;
-    var pattern = params.pattern;
+var getPlaylistItem = function(params, cb) {
     var position = params.position;
-
-    switch(type) {
-        case 'incremental':
-            var targetFile = util.format(pattern, position)
-            return targetFile;
-        case 'glob':
-            var r = glob.sync(escapePath(pattern), { cwd: dir });
-            var targetFile = r[position-1];
-            return targetFile;
-        case 'file':
-            return;
-        default:
-            return new Error('Invalid type');
-    };
+    getPlaylist(params, function(e, r) {
+        if (e) { cb(e); return; }
+        if (r[position] === null) { cb(new Error('Invalid position')); return; }
+        cb(null, r[position]);
+    });
 };
 
 module.exports = {
     getMetrics: getMetrics,
-    getPlaylistItemSync: getPlaylistItemSync
+    getPlaylist: getPlaylist,
+    getPlaylistItem: getPlaylistItem
 };
