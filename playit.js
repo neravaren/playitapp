@@ -27,9 +27,9 @@ var configLoaded = false;
 var playingItem = '';
 async.series([
     function(cb) {
-        if (cmd.initdir) {
+        if (cmd.initdir || cmd.initfile) {
             console.log('Init folder..');
-            config.init('.', function(e) {
+            config.init(cmd.initfile || '.', function(e) {
                 config.save();
                 playlist.getPlaylist(config.data, function(e, r) {
                     console.log(r);

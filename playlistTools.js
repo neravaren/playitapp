@@ -88,7 +88,7 @@ var getPlaylistItem = function(params, cb) {
     getPlaylist(params, function(e, r) {
         if (e) { cb(e); return; }
         if (r[position] === null) { cb(new Error('Invalid position')); return; }
-        cb(null, r[position]);
+        cb(null, r[position - 1]);
     });
 };
 
