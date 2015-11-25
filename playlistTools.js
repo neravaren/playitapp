@@ -3,6 +3,7 @@ var fs = require('fs'),
     util = require('util'),
     glob = require('glob'),
     async = require('async'),
+    http = require('http'),
     _ = require('lodash');
 
 var escapePath = function(path) {
@@ -92,7 +93,14 @@ var getPlaylistItem = function(params, cb) {
     });
 };
 
+var getRemoteFilename = function(url, cb) {
+    http.request(url, function(res) {
+        cb(null, res.headers);
+    }).end();
+};
+
 module.exports = {
+    getFileMetric: getFileMetric,
     getMetrics: getMetrics,
     getPlaylist: getPlaylist,
     getPlaylistItem: getPlaylistItem

@@ -25,6 +25,7 @@ console.log(chalk.bold('Args:'), cmd.args);
 
 var configLoaded = false;
 var playingItem = '';
+
 async.series([
     function(cb) {
         if (cmd.initdir || cmd.initfile) {
