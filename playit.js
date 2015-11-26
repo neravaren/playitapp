@@ -1,113 +1,60 @@
 #!/usr/local/bin/node
 
-var fs = require('fs'),
-    util = require('util'),
-    path = require('path'),
-    spawn = require('child_process').spawn,
-    moment = require('moment'),
-    glob = require('glob'),
+var cmd = require('commander'),
+    chalk = require('chalk'),
     async = require('async'),
-    cmd = require('commander'),     //https://github.com/tj/commander.js
-    //keypress = require('keypress'), //https://github.com/TooTallNate/keypress
-    chalk = require('chalk'),       //https://github.com/sindresorhus/chalk
-    _ = require('lodash'),          //https://lodash.com/docs#trim
-    playlist = require('./playlistTools'),
-    config = require('./config');
+    Player = require('./player');
 
 cmd.version('1.0.0')
-   .option('-i, --initdir', 'Init current folder as playable based on content', '')
+   .option('-i, --info', 'Show current configuration and playlist')
+   .option('-d, --initdir', 'Init current folder as playable based on content', '')
    .option('-f, --initfile [srcfile]', 'Init current folder as playable based on url list file', '')
-   .option('-s, --set [num]', 'Force to change current series', '')
+   .option('-g, --global', 'Save configuration to global storage', '')
+   .option('-j, --jump [num]', 'Jump to series and play', '')
    .parse(process.argv);
 
 console.log(chalk.bold('PlayItApp!'));
-console.log(chalk.bold('Args:'), cmd.args);
 
-var configLoaded = false;
-var playingItem = '';
+var player = new Player();
 
-async.series([
-    function(cb) {
-        if (cmd.initdir || cmd.initfile) {
-            console.log('Init folder..');
-            config.init(cmd.initfile || '.', function(e) {
-                config.save();
-                playlist.getPlaylist(config.data, function(e, r) {
-                    console.log(r);
-                    cb(1);
-                });
-            });
-            return;
-        }
-        cb();
-    },
-
-    function(cb) {
-        configLoaded = config.load();
-        if (configLoaded && cmd.set > 0) {
-            console.log('Chaging current series to ' + cmd.set);
-            config.data.position = cmd.set;
-            config.save();
-            cb(1);
-            return;
-        }
-        cb();
-    },
-
-    function(cb) {
-        if (cmd.args.length < 1) {
-            if (configLoaded) {
-                console.log(chalk.bold('Settings:'), config.data);
-                playlist.getPlaylist(config.data, function(e, r) {
-                    console.log(chalk.bold('Playlist:'), r);
-                    cb(1);
-                });
-                return;
-            } else {
-                console.warn('Folder not initialized, run with "-i"');
-            }
-            cb(1);
-            return;
-        }
-        cb();
-    },
-
-    function(cb) {
-        if (_.contains(cmd.args, 'next')) {
-            config.data.position = parseInt(config.data.position) + 1;
-            console.log('New position:', config.data.position);
-            config.save();
-        }
-
-        if (_.contains(cmd.args, 'prev')) {
-            config.data.position = parseInt(config.data.position) - 1;
-            console.log('New position:', config.data.position);
-            config.save();
-        }
-
-        cb();
-    },
-
-    function(cb) {
-        playlist.getPlaylistItem(config.data, function(e, r) {
-            if (e) { cb(e); return; }
-            playingItem = r;
-            console.log(chalk.bold('Playing:'), playingItem);
-            cb();
+if (cmd.initdir || cmd.initfile) {
+    player.configuration.Init(cmd.initdir || cmd.initfile, function(e) {
+        if (e) { console.log(e); return; }
+        console.log(chalk.bold('Inited!'));
+        player.storage = cmd.global ? 'global' : 'local';
+        player.Save(function(e) {
+            if (e) { console.log(e); return; }
+            console.log(chalk.bold('Configuration saved.'));
         });
-    },
-    function(cb) {
-        var playerArgs = config.data.playerArgs;
-        playerArgs.push(playingItem);
+    });
+    return;
+}
 
-        spawn(config.data.player, playerArgs, { 
-            stdio: 'inherit' 
-        }).on('close', function (code) {
-            console.log(_.capitalize(config.data.player) + ' has exited with code ' + code);
-            cb();
-        });
+player.Load(function(e) {
+    if (e) {
+        console.log(e);
+        return;
     }
 
-],  function(e) {
-    console.log('Done', e);
+    if (cmd.info) {
+        console.log(player.configuration);
+        return;
+    }
+
+    if (cmd.jump) {
+        console.log(chalk.bold('Jump to:'), cmd.jump, 'position.');
+        player.Jump(cmd.jump);
+    }
+
+    player.Play(function(e) {
+        if (e) {
+            console.log(e);
+            return;
+        }
+        console.log(chalk.bold('Played well!'));
+        player.Save(function(e) {
+            if (e) { console.log(e); return; }
+            console.log(chalk.bold('Configuration saved.'));
+        });
+    });
 });
