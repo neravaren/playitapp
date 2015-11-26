@@ -7,6 +7,7 @@ var cmd = require('commander'),
 
 cmd.version('1.0.0')
    .option('-i, --info', 'Show current configuration and playlist')
+   .option('-n, --next', 'Switch to next episode')
    .option('-d, --initdir', 'Init current folder as playable based on content', '')
    .option('-f, --initfile [srcfile]', 'Init current folder as playable based on url list file', '')
    .option('-g, --global', 'Save configuration to global storage', '')
@@ -22,6 +23,7 @@ if (cmd.initdir || cmd.initfile) {
         if (e) { console.log(e); return; }
         console.log(chalk.bold('Inited!'));
         player.storage = cmd.global ? 'global' : 'local';
+        console.log(chalk.bold('Storage:'), player.storage);
         player.Save(function(e) {
             if (e) { console.log(e); return; }
             console.log(chalk.bold('Configuration saved.'));
@@ -42,8 +44,13 @@ player.Load(function(e) {
     }
 
     if (cmd.jump) {
-        console.log(chalk.bold('Jump to:'), cmd.jump, 'position.');
+        console.log(chalk.bold('Jump to:'), cmd.jump, 'episode.');
         player.Jump(cmd.jump);
+    }
+
+    if (cmd.next) {
+        console.log(chalk.bold('Next episode.'));
+        player.Next();
     }
 
     player.Play(function(e) {

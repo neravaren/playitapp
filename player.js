@@ -13,7 +13,7 @@ function Player(cwd) {
     
     var filename = '.playit',
         homeDir = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'],
-        currentDir = cwd || process.cwd(),
+        currentDir = cwd || path.resolve(process.cwd()),
         currentDirHash = crypto.createHash('md5').update(currentDir).digest('hex');
 
     this.storages = { 
@@ -25,9 +25,12 @@ function Player(cwd) {
 Player.prototype.Play = function(cb) {
     var playerApp = this.configuration.player.app;
     var playerArgs = this.configuration.player.args;
+    var cObj = this;
     this.configuration.GetPlaylistItem(function(e, playingItem) {
         if (e) { cb(e); return; }
-        console.log(chalk.bold('Playing:'), playingItem);
+        console.log(chalk.bold('Playing:'), 
+            cObj.configuration.playlist.position + '/'+ cObj.configuration.playlist.data.length,
+            playingItem);
         playerArgs.push(playingItem);
         spawn(playerApp, playerArgs, {
             stdio: 'inherit' 
@@ -40,6 +43,10 @@ Player.prototype.Play = function(cb) {
 
 Player.prototype.Jump = function(position) {
     this.configuration.playlist.position = position;
+};
+
+Player.prototype.Next = function() {
+    this.configuration.playlist.position = this.configuration.playlist.position + 1;
 };
 
 Player.prototype.Load = function(cb) {
