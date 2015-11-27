@@ -4,7 +4,7 @@
   "description": "Tool to view players and store progress",
   "main": "playit.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/test.js"
   },
   "repository": {
     "type": "git",
