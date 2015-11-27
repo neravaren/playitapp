@@ -40,7 +40,7 @@ Configuration.prototype.Init = function(source, cb) {
         },
         function(stats, cb) {
             if (stats.isFile()) {
-                cObj.directory = path.dirname(source);
+                cObj.directory = path.resolve(path.dirname(source));
                 cObj.playlist.type = 'file';
                 cObj.playlist.pattern = path.basename(source);
                 cObj.playlist.position = 1;
@@ -49,7 +49,7 @@ Configuration.prototype.Init = function(source, cb) {
         },
         function(stats, cb) {
             if (stats.isDirectory()) {
-                cObj.directory = source;
+                cObj.directory = path.resolve(source);
                 cObj.playlist.type = 'glob';
                 cObj.playlist.pattern = '+(*.avi|*.mp4|*.mkv)';
                 cObj.playlist.position = 1;

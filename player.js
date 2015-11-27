@@ -24,7 +24,7 @@ function Player(cwd) {
 
 Player.prototype.Play = function(cb) {
     var playerApp = this.configuration.player.app;
-    var playerArgs = this.configuration.player.args;
+    var playerArgs = _.clone(this.configuration.player.args);
     var cObj = this;
     this.configuration.GetPlaylistItem(function(e, playingItem) {
         if (e) { cb(e); return; }
