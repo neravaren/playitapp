@@ -46,7 +46,7 @@ Player.prototype.Jump = function(position) {
 };
 
 Player.prototype.Next = function() {
-    this.configuration.playlist.position = this.configuration.playlist.position + 1;
+    this.configuration.playlist.position = parseInt(this.configuration.playlist.position) + 1;
 };
 
 Player.prototype.Load = function(cb) {
