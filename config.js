@@ -16,7 +16,7 @@ function Configuration(data) {
     this.directory = data.directory || '';
     this.player = {
         app: data.player.app || 'omxplayer',
-        args: data.player.args || [ '--refresh', '--blank', '--align center', '--adev local' ]
+        args: data.player.args || [ '--refresh', '--blank', '--align', 'center', '--adev', 'local' ]
     }
     this.playlist = {
         data: data.playlist.data || [],
