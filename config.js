@@ -28,6 +28,8 @@ function Configuration(data) {
 
 Configuration.prototype.Init = function(source, cb) {
     var cObj = this;
+    if (source === true) { source = process.cwd(); }
+    source = path.resolve(source);
     async.waterfall([
         function(cb) {
             fs.stat(source, function(e, stats) {
