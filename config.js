@@ -14,17 +14,21 @@ function Configuration(data) {
 
     this.inited = data.inited || false;
     this.directory = data.directory || '';
+
     this.player = {
         app: data.player.app || 'omxplayer',
         args: data.player.args || [ '--refresh', '--blank', '--align', 'center', '--adev', 'local' ]
-    }
+    };
+
     this.playlist = {
         data: data.playlist.data || [],
         type: data.playlist.type || '',
         pattern: data.playlist.pattern || '',
         position: data.playlist.position || 1
     };
-};
+
+    this.playlist.series = data.playlist.series || this.playlist.data.length;
+}
 
 Configuration.prototype.Init = function(source, cb) {
     var cObj = this;
@@ -62,6 +66,7 @@ Configuration.prototype.Init = function(source, cb) {
             cObj.GetPlaylist(function(e, list) {
                 if (e) { cb(e); return; }
                 cObj.playlist.data = list;
+                cObj.playlist.series = list.length;
                 cb();
             });
         },
@@ -87,7 +92,7 @@ Configuration.prototype.GetPlaylist = function(cb) {
         default:
             cb(new Error('Invalid type'));
             return;
-    };
+    }
 };
 
 Configuration.prototype.GetPlaylistItem = function(cb) {
