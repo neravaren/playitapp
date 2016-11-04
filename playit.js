@@ -8,6 +8,7 @@ var cmd = require('commander'),
 cmd.version('1.0.0')
    .option('-i, --info', 'Show current configuration and playlist')
    .option('-n, --next', 'Switch to next episode')
+   .option('-s, --sub', 'Force srt subtitle with same name as file')
    .option('-d, --initdir', 'Init current folder as playable based on content', '')
    .option('-f, --initfile [srcfile]', 'Init current folder as playable based on url list file', '')
    .option('-g, --global', 'Save configuration to global storage', '')
@@ -51,6 +52,10 @@ player.Load(function(e) {
     if (cmd.next) {
         console.log(chalk.bold('Next episode.'));
         player.Next();
+    }
+
+    if (cmd.sub) {
+        player.subtitles = true;
     }
 
     player.Play(function(e) {

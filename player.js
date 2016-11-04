@@ -20,7 +20,7 @@ function Player(cwd) {
         'local': { path: path.join(currentDir, filename), storage: 'local' },
         'global' : { path: path.join(homeDir, filename, currentDirHash), storage: 'global' }
     };
-};
+}
 
 Player.prototype.Play = function(cb) {
     var playerApp = this.configuration.player.app;
@@ -28,10 +28,20 @@ Player.prototype.Play = function(cb) {
     var cObj = this;
     this.configuration.GetPlaylistItem(function(e, playingItem) {
         if (e) { cb(e); return; }
-        console.log(chalk.bold('Playing:'), 
-            cObj.configuration.playlist.position + '/'+ cObj.configuration.playlist.data.length,
-            playingItem);
+
+        console.log(chalk.bold('Playing:'),
+            cObj.configuration.playlist.position + '/' + cObj.configuration.playlist.data.length);
+
+        if (cObj.subtitles) {
+            var subtitleItem = path.basename(playingItem, path.extname(playingItem)) + '.srt';
+            playerArgs.push('--subtitle');
+            playerArgs.push(subtitleItem);
+            console.log(chalk.bold('Subtitle:'), subtitleItem);
+        }
+
+        console.log(chalk.bold('Video:'), playingItem);
         playerArgs.push(playingItem);
+
         spawn(playerApp, playerArgs, {
             stdio: 'inherit' 
         }).on('close', function (code) {
